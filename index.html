@@ -23,6 +23,7 @@ button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margi
 <span class="user" id="user"></span>
 <button onclick="login()">Login</button>
 <button onclick="logout()">Logout</button>
+<button onclick="toggleMyAds()">Mine annoncer</button>
 <button onclick="openModal()">Ny annonce</button>
 </div>
 </header>
@@ -59,6 +60,7 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 let currentUser = null;
+let showOnlyMine = false;
 
 function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
@@ -79,19 +81,38 @@ function render(){
 
   db.collection("listings").orderBy("created","desc").onSnapshot(snapshot=>{
     container.innerHTML="";
+
     snapshot.forEach(doc=>{
       const d=doc.data();
+
+      // filtrer hvis "mine annoncer" er aktiv
+      if(showOnlyMine && currentUser && d.user !== currentUser.uid) return;
+
       const div=document.createElement("div");
       div.className="card";
+
       div.innerHTML=`
         <img src="${d.image || 'https://via.placeholder.com/300'}" style="width:100%">
         <h4>${d.title}</h4>
         <p>${d.price} kr</p>
         <small>${d.city}</small>
+        ${currentUser && d.user === currentUser.uid ? `<br><button onclick="deleteAd('${doc.id}')">Slet</button>` : ""}
       `;
+
       container.appendChild(div);
     });
   });
+}
+
+function toggleMyAds(){
+  showOnlyMine = !showOnlyMine;
+  render();
+}
+
+function deleteAd(id){
+  if(confirm("Er du sikker på du vil slette?")){
+    db.collection("listings").doc(id).delete();
+  }
 }
 
 function openModal(){

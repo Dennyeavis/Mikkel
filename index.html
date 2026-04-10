@@ -65,12 +65,13 @@ let showOnlyMine = false;
 function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider)
-    .then(()=>{
-      console.log("Login succes");
+    .then((result)=>{
+      console.log("Login succes", result.user);
+      alert("Du er nu logget ind ✔");
     })
     .catch(err=>{
       console.error("Login fejl:", err);
-      alert("Login virker ikke endnu – husk at aktivere Google login i Firebase");
+      alert("Login fejl: " + err.message);
     });
 }
 

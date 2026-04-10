@@ -64,7 +64,10 @@ let showOnlyMine = false;
 
 function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider)
+  auth.signInWithPopup(provider).catch(err=>{
+    console.warn("Popup fejlede – prøver redirect i stedet", err);
+    auth.signInWithRedirect(provider);
+  })
     .then((result)=>{
       console.log("Login succes", result.user);
       alert("Du er nu logget ind ✔");
@@ -157,14 +160,37 @@ function save(){
     return;
   }
 
+  // 🔥 FIX: komprimer billede før upload
+  const img = new Image();
   const reader = new FileReader();
+
   reader.onload = function(e){
+    img.src = e.target.result;
+  };
+
+  img.onload = function(){
+    const canvas = document.createElement("canvas");
+
+    // max størrelse
+    const maxWidth = 800;
+    const scale = maxWidth / img.width;
+
+    canvas.width = maxWidth;
+    canvas.height = img.height * scale;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // komprimer kvalitet (0.7 = god balance)
+    const compressed = canvas.toDataURL("image/jpeg", 0.7);
+
     db.collection("listings").add({
       title, price, city, desc,
-      image: e.target.result,
+      image: compressed,
       user: currentUser.uid,
       created: Date.now()
     });
+
     closeModal();
   };
 

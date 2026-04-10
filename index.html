@@ -3,28 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Den Nye Avis - TEST</title>
+<title>Den Nye Avis</title>
 <style>
 body {font-family: Arial; margin:0}
-header {background:#003399; color:#fff; padding:15px; text-align:center}
+header {background:#003399; color:#fff; padding:15px; display:flex; justify-content:space-between; align-items:center}
+button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer}
 .grid {display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; padding:10px}
 .card {border:1px solid #ccc; padding:10px}
+.modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0008}
+.box {background:#fff; padding:20px; margin:10% auto; width:300px}
 </style>
 </head>
 <body>
 
 <header>
-<h2>Den Nye Avis (TEST)</h2>
+<h2>Den Nye Avis</h2>
+<button onclick="openModal()">Ny annonce</button>
 </header>
 
-<div class="grid">
-  <div class="card">
-    <img src="https://via.placeholder.com/300" style="width:100%">
-    <h4>Test annonce</h4>
-    <p>1000 kr</p>
-    <small>København</small>
-  </div>
+<div class="grid" id="listings"></div>
+
+<div class="modal" id="modal">
+<div class="box">
+<h3>Ny annonce</h3>
+<input id="title" placeholder="Titel"><br>
+<input id="price" placeholder="Pris"><br>
+<input id="city" placeholder="By"><br>
+<textarea id="desc" placeholder="Beskrivelse"></textarea><br><br>
+<button onclick="save()">Gem</button>
+<button onclick="closeModal()">Luk</button>
 </div>
+</div>
+
+<script>
+let listings = JSON.parse(localStorage.getItem("listings")) || [];
+
+function render(){
+  const container=document.getElementById("listings");
+  container.innerHTML="";
+  listings.forEach((d,i)=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <img src="https://via.placeholder.com/300" style="width:100%">
+      <h4>${d.title}</h4>
+      <p>${d.price} kr</p>
+      <small>${d.city}</small>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function openModal(){
+  document.getElementById("modal").style.display="block";
+}
+
+function closeModal(){
+  document.getElementById("modal").style.display="none";
+}
+
+function save(){
+  const title=document.getElementById("title").value;
+  const price=document.getElementById("price").value;
+  const city=document.getElementById("city").value;
+  const desc=document.getElementById("desc").value;
+
+  if(!title || !price) return alert("Udfyld titel og pris");
+
+  listings.push({title,price,city,desc});
+  localStorage.setItem("listings", JSON.stringify(listings));
+
+  closeModal();
+  render();
+}
+
+// demo data første gang
+if(listings.length === 0){
+  listings.push({title:"iPhone 13",price:"3500",city:"København"});
+  listings.push({title:"Sofa",price:"1200",city:"Aarhus"});
+  localStorage.setItem("listings", JSON.stringify(listings));
+}
+
+render();
+</script>
 
 </body>
 </html>

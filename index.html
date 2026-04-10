@@ -50,9 +50,9 @@ button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margi
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyCsKNlcgVXD5k2fnnhIPXaT-qPKCvzu6gA",
-  authDomain: "dennyeavis-215ac.firebaseapp.com",
-  projectId: "dennyeavis-215ac"
+  apiKey: "AIzaSyDX7j-Kyo60eOrzQGoCJZL_n7-CE1n5BBk",
+  authDomain: "dennyeavis-f2b4a.firebaseapp.com",
+  projectId: "dennyeavis-f2b4a"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -64,7 +64,14 @@ let showOnlyMine = false;
 
 function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider);
+  auth.signInWithPopup(provider)
+    .then(()=>{
+      console.log("Login succes");
+    })
+    .catch(err=>{
+      console.error("Login fejl:", err);
+      alert("Login virker ikke endnu – husk at aktivere Google login i Firebase");
+    });
 }
 
 function logout(){

@@ -4,15 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Den Nye Avis</title>
+<meta name="description" content="Køb og sælg brugte ting i Danmark. Gratis annoncer på Den Nye Avis.">
 <style>
 body {font-family: Arial; margin:0}
 header {background:#003399; color:#fff; padding:15px; display:flex; justify-content:space-between; align-items:center}
 button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margin-left:5px}
+.hero {padding:30px; text-align:center; background:#f5f5f5}
 .grid {display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; padding:10px}
 .card {border:1px solid #ccc; padding:10px}
 .modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0008}
-.box {background:#fff; padding:20px; margin:10% auto; width:300px}
+.box {background:#fff; padding:20px; margin:10% auto; width:320px; max-height:70%; overflow:auto}
 .user {font-size:12px}
+.carousel {display:flex; overflow:hidden; gap:10px; padding:10px}
+.carousel-track {display:flex; gap:10px; animation: scroll 20s linear infinite}
+@keyframes scroll {0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.carousel img {width:150px; border-radius:8px}
+.cta-popup {position:fixed; bottom:20px; right:20px; background:#003399; color:#fff; padding:15px; border-radius:10px; cursor:pointer}
+.footer {padding:20px; text-align:center; background:#eee}
 </style>
 </head>
 <body>
@@ -25,11 +33,34 @@ button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margi
 <button onclick="logout()">Logout</button>
 <button onclick="toggleMyAds()">Mine annoncer</button>
 <button onclick="openModal()">Ny annonce</button>
+<button onclick="openContact()">Kontakt</button>
 </div>
 </header>
 
+<div class="hero">
+<h1>Køb og sælg i hele Danmark</h1>
+<p>Gratis annoncer – hurtigt og nemt</p>
+<button onclick="openModal()">Opret annonce nu</button>
+</div>
+
+<div class="carousel"><div class="carousel-track" id="carousel"></div></div>
 <div class="grid" id="listings"></div>
 
+<div class="cta-popup" onclick="openModal()">📢 Har du noget at sælge?</div>
+
+<!-- KONTAKT -->
+<div class="modal" id="contactModal">
+<div class="box">
+<h3>Kontakt kundeservice</h3>
+<input id="contactName" placeholder="Navn"><br>
+<input id="contactEmail" placeholder="Email"><br>
+<textarea id="contactMsg" placeholder="Besked"></textarea><br><br>
+<button onclick="sendContact()">Send</button>
+<button onclick="closeContact()">Luk</button>
+</div>
+</div>
+
+<!-- NY ANNONCE -->
 <div class="modal" id="modal">
 <div class="box">
 <h3>Ny annonce</h3>
@@ -43,7 +74,17 @@ button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margi
 </div>
 </div>
 
-<!-- Firebase -->
+<!-- CHAT -->
+<div class="modal" id="chatModal">
+<div class="box">
+<h3>Chat</h3>
+<div id="chatMessages"></div>
+<input id="chatInput" placeholder="Skriv besked"><br><br>
+<button onclick="sendMessage()">Send</button>
+<button onclick="closeChat()">Luk</button>
+</div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -61,42 +102,36 @@ const auth = firebase.auth();
 
 let currentUser = null;
 let showOnlyMine = false;
+let currentChatId = null;
 
 function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(err=>{
-    console.warn("Popup fejlede – prøver redirect i stedet", err);
-    auth.signInWithRedirect(provider);
-  })
-    .then((result)=>{
-      console.log("Login succes", result.user);
-      alert("Du er nu logget ind ✔");
-    })
-    .catch(err=>{
-      console.error("Login fejl:", err);
-      alert("Login fejl: " + err.message);
-    });
+  auth.signInWithPopup(provider).catch(()=>auth.signInWithRedirect(provider));
 }
 
-function logout(){
-  auth.signOut();
-}
+function logout(){ auth.signOut(); }
 
 auth.onAuthStateChanged(user=>{
   currentUser = user;
   document.getElementById("user").innerText = user ? user.email : "Ikke logget ind";
 });
 
+function share(title){
+  const url = window.location.href;
+  const text = encodeURIComponent(title + " - Se annoncen her: " + url);
+  window.open("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url) + "&quote=" + text);
+}
+
 function render(){
   const container=document.getElementById("listings");
+  const carousel=document.getElementById("carousel");
 
   db.collection("listings").orderBy("created","desc").onSnapshot(snapshot=>{
     container.innerHTML="";
+    carousel.innerHTML="";
 
     snapshot.forEach(doc=>{
       const d=doc.data();
-
-      // filtrer hvis "mine annoncer" er aktiv
       if(showOnlyMine && currentUser && d.user !== currentUser.uid) return;
 
       const div=document.createElement("div");
@@ -107,35 +142,38 @@ function render(){
         <h4>${d.title}</h4>
         <p>${d.price} kr</p>
         <small>${d.city}</small>
+        <br><button onclick="openChat('${doc.id}')">Chat</button>
+        <button onclick="share('${d.title}')">Del</button>
         ${currentUser && d.user === currentUser.uid ? `<br><button onclick="deleteAd('${doc.id}')">Slet</button>` : ""}
       `;
 
       container.appendChild(div);
+
+      const img=document.createElement("img");
+      img.src=d.image || 'https://via.placeholder.com/300';
+      carousel.appendChild(img.cloneNode());
+      carousel.appendChild(img);
     });
   });
 }
 
-function toggleMyAds(){
-  showOnlyMine = !showOnlyMine;
-  render();
-}
+function toggleMyAds(){ showOnlyMine = !showOnlyMine; render(); }
+function deleteAd(id){ if(confirm("Slet?")) db.collection("listings").doc(id).delete(); }
 
-function deleteAd(id){
-  if(confirm("Er du sikker på du vil slette?")){
-    db.collection("listings").doc(id).delete();
-  }
-}
+function openModal(){ if(!currentUser) return alert("Log ind"); document.getElementById("modal").style.display="block"; }
+function closeModal(){ document.getElementById("modal").style.display="none"; }
 
-function openModal(){
-  if(!currentUser){
-    alert("Du skal være logget ind");
-    return;
-  }
-  document.getElementById("modal").style.display="block";
-}
+function openContact(){ document.getElementById("contactModal").style.display="block"; }
+function closeContact(){ document.getElementById("contactModal").style.display="none"; }
 
-function closeModal(){
-  document.getElementById("modal").style.display="none";
+function sendContact(){
+  const name=document.getElementById("contactName").value;
+  const email=document.getElementById("contactEmail").value;
+  const msg=document.getElementById("contactMsg").value;
+
+  db.collection("support").add({name,email,msg,created:Date.now()});
+  alert("Tak! Vi vender tilbage.");
+  closeContact();
 }
 
 function save(){
@@ -149,52 +187,58 @@ function save(){
 
   if(!title || !price) return alert("Udfyld titel og pris");
 
-  if(!file){
-    db.collection("listings").add({
-      title, price, city, desc,
-      image:"https://via.placeholder.com/300",
-      user: currentUser.uid,
-      created: Date.now()
-    });
+  const addData = (img)=>{
+    db.collection("listings").add({title,price,city,desc,image:img,user:currentUser.uid,created:Date.now()});
     closeModal();
-    return;
-  }
+  };
 
-  // 🔥 FIX: komprimer billede før upload
+  if(!file) return addData("https://via.placeholder.com/300");
+
   const img = new Image();
   const reader = new FileReader();
-
-  reader.onload = function(e){
-    img.src = e.target.result;
+  reader.onload=e=>img.src=e.target.result;
+  img.onload=()=>{
+    const canvas=document.createElement("canvas");
+    const scale=800/img.width;
+    canvas.width=800;
+    canvas.height=img.height*scale;
+    canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+    addData(canvas.toDataURL("image/jpeg",0.7));
   };
-
-  img.onload = function(){
-    const canvas = document.createElement("canvas");
-
-    // max størrelse
-    const maxWidth = 800;
-    const scale = maxWidth / img.width;
-
-    canvas.width = maxWidth;
-    canvas.height = img.height * scale;
-
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    // komprimer kvalitet (0.7 = god balance)
-    const compressed = canvas.toDataURL("image/jpeg", 0.7);
-
-    db.collection("listings").add({
-      title, price, city, desc,
-      image: compressed,
-      user: currentUser.uid,
-      created: Date.now()
-    });
-
-    closeModal();
-  };
-
   reader.readAsDataURL(file);
+}
+
+function openChat(id){
+  if(!currentUser) return alert("Log ind for chat");
+  currentChatId = id;
+  document.getElementById("chatModal").style.display="block";
+
+  db.collection("chats").doc(id).collection("messages").orderBy("created")
+  .onSnapshot(snap=>{
+    const box=document.getElementById("chatMessages");
+    box.innerHTML="";
+    snap.forEach(doc=>{
+      const m=doc.data();
+      const div=document.createElement("div");
+      div.innerText = m.user + ": " + m.text;
+      box.appendChild(div);
+    });
+  });
+}
+
+function closeChat(){ document.getElementById("chatModal").style.display="none"; }
+
+function sendMessage(){
+  const text=document.getElementById("chatInput").value;
+  if(!text) return;
+
+  db.collection("chats").doc(currentChatId).collection("messages").add({
+    text,
+    user: currentUser.email,
+    created: Date.now()
+  });
+
+  document.getElementById("chatInput").value="";
 }
 
 render();

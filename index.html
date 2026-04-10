@@ -35,22 +35,41 @@ button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer}
 </div>
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-let listings = JSON.parse(localStorage.getItem("listings")) || [];
+const firebaseConfig = {
+  apiKey: "AIzaSyCsKNlcgVXD5k2fnnhIPXaT-qPKCvzu6gA",
+  authDomain: "dennyeavis-215ac.firebaseapp.com",
+  projectId: "dennyeavis-215ac"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 function render(){
   const container=document.getElementById("listings");
   container.innerHTML="";
-  listings.forEach((d,i)=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`
-      <img src="https://via.placeholder.com/300" style="width:100%">
-      <h4>${d.title}</h4>
-      <p>${d.price} kr</p>
-      <small>${d.city}</small>
-    `;
-    container.appendChild(div);
+
+  db.collection("listings").orderBy("created","desc").onSnapshot(snapshot=>{
+    container.innerHTML="";
+    snapshot.forEach(doc=>{
+      const d=doc.data();
+      const div=document.createElement("div");
+      div.className="card";
+      div.innerHTML=`
+        <img src="https://via.placeholder.com/300" style="width:100%">
+        <h4>${d.title}</h4>
+        <p>${d.price} kr</p>
+        <small>${d.city}</small>
+      `;
+      container.appendChild(div);
+    });
+  }, err=>{
+    console.error(err);
+    container.innerHTML = "<p style='color:red'>Firebase fejl – tjek rules</p>";
   });
 }
 
@@ -70,18 +89,12 @@ function save(){
 
   if(!title || !price) return alert("Udfyld titel og pris");
 
-  listings.push({title,price,city,desc});
-  localStorage.setItem("listings", JSON.stringify(listings));
+  db.collection("listings").add({
+    title, price, city, desc,
+    created: Date.now()
+  });
 
   closeModal();
-  render();
-}
-
-// demo data første gang
-if(listings.length === 0){
-  listings.push({title:"iPhone 13",price:"3500",city:"København"});
-  listings.push({title:"Sofa",price:"1200",city:"Aarhus"});
-  localStorage.setItem("listings", JSON.stringify(listings));
 }
 
 render();

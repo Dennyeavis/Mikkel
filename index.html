@@ -126,7 +126,7 @@ function render(){
   const container=document.getElementById("listings");
   const carousel=document.getElementById("carousel");
 
-  db.collection("listings").orderBy("created","desc").onSnapshot(snapshot=>{
+  db.collection("listings").onSnapshot(snapshot=>{
     container.innerHTML="";
     carousel.innerHTML="";
 

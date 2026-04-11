@@ -126,7 +126,7 @@ function render(){
   const container=document.getElementById("listings");
   const carousel=document.getElementById("carousel");
 
-  db.collection("listings").onSnapshot(snapshot=>{
+  db.collection("listings").orderBy("created","desc").onSnapshot(snapshot=>{
     container.innerHTML="";
     carousel.innerHTML="";
 
@@ -190,6 +190,11 @@ function save(){
   const addData = (img)=>{
     db.collection("listings").add({title,price,city,desc,image:img,user:currentUser.uid,created:Date.now()});
     closeModal();
+    document.getElementById("title").value="";
+    document.getElementById("price").value="";
+    document.getElementById("city").value="";
+    document.getElementById("desc").value="";
+    document.getElementById("image").value="";
   };
 
   if(!file) return addData("https://via.placeholder.com/300");
@@ -223,6 +228,7 @@ function openChat(id){
       div.innerText = m.user + ": " + m.text;
       box.appendChild(div);
     });
+    box.scrollTop = box.scrollHeight;
   });
 }
 

@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Den Nye Avis - Køb og salg i Danmark | Gratis annoncer</title>
-<meta name="keywords" content="køb og salg, brugte ting, bolig, lejebolig, brugt sofa, iPhone brugt, DBA alternativ">
+<meta name="keywords" content="køb og salg, brugte ting, bolig, lejebolig, brugt sofa, iPhone brugt, gratis annoncer, markedsplads Danmark, marketplace Danmark, DBA alternativ">
 <meta property="og:title" content="Den Nye Avis - Køb og salg">
 <meta property="og:description" content="Gratis markedsplads i Danmark. Køb og sælg nemt.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://dennyeavis.dk">
-<meta name="description" content="Køb og sælg brugte ting i Danmark. Gratis annoncer på Den Nye Avis.">
+<meta name="description" content="Gratis markedsplads i Danmark. Køb og sælg brugte ting, boliger og biler nemt og hurtigt.">
 <style>
 body {font-family: 'Segoe UI', Arial; margin:0; background:#f4f6fb; color:#333}
 header {background:#003399; color:#fff; padding:15px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10}
@@ -47,6 +47,7 @@ button:hover {background:#ffd633; transform:scale(1.05)}
 <button onclick="toggleFavorites()">Favoritter</button>
 <button onclick="openModal()">Ny annonce</button>
 <button onclick="openContact()">Kontakt</button>
+<button onclick="openAdmin()">Admin</button>
 </div>
 </header>
 
@@ -80,6 +81,26 @@ button:hover {background:#ffd633; transform:scale(1.05)}
 <h3>Populære søgninger</h3>
 <p>Køb brugt sofa København | Lejebolig København | Brugt iPhone | Billig bil Danmark</p>
 </div>
+<!-- SEO LANDING LINKS -->
+<div style="padding:20px;background:#fff;margin:10px;border-radius:12px">
+<h2>Populære kategorier</h2>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<a href="/?q=iphone" style="padding:8px 12px;background:#eef;border-radius:8px">iPhone brugt</a>
+<a href="/?q=sofa" style="padding:8px 12px;background:#eef;border-radius:8px">Brugt sofa</a>
+<a href="/?q=lejebolig" style="padding:8px 12px;background:#eef;border-radius:8px">Lejebolig</a>
+<a href="/?q=bil" style="padding:8px 12px;background:#eef;border-radius:8px">Billige biler</a>
+<a href="/?q=gratis" style="padding:8px 12px;background:#eef;border-radius:8px">Gratis ting</a>
+</div>
+</div>
+
+<!-- SEO TEKST -->
+<div style="padding:20px;font-size:14px;color:#555;max-width:900px;margin:auto">
+<h2>Køb og salg i Danmark – gratis markedsplads</h2>
+<p>Den Nye Avis er en moderne markedsplads hvor du kan købe og sælge brugte ting i hele Danmark. Find alt fra brugte iPhones, sofaer og møbler til biler og boliger.</p>
+<p>Søger du efter lejebolig i København, brugt iPhone eller billig bil? Så er Den Nye Avis et stærkt alternativ til andre markedspladser. Opret gratis annoncer og sælg hurtigt.</p>
+<p>Vi gør det nemt at handle lokalt i Danmark – uanset om du leder efter elektronik, bolig, biler eller gratis ting.</p>
+</div>
+
 <div class="grid" id="listings"></div>
 
 <div class="cta-popup" onclick="openModal()">🚀 Sælg hurtigt – opret annonce nu!</div>
@@ -124,6 +145,15 @@ button:hover {background:#ffd633; transform:scale(1.05)}
 <input type="file" id="image"><br><br>
 <button onclick="save()">Gem</button>
 <button onclick="closeModal()">Luk</button>
+</div>
+</div>
+
+<!-- ADMIN -->
+<div class="modal" id="adminModal">
+<div class="box">
+<h3>Admin dashboard</h3>
+<div id="adminStats"></div>
+<button onclick="closeAdmin()">Luk</button>
 </div>
 </div>
 
@@ -207,7 +237,8 @@ function render(){
       const isNew = (Date.now() - d.created) < 86400000;
       const isTrending = viewCounts[doc.id] > 3;
       div.innerHTML=`
-        <div class="badge">${isNew ? 'NY' : isTrending ? '🔥 POPULÆR' : ''}</div>
+        <div style="font-size:11px;color:#999">👁 ${viewCounts[doc.id]} visninger</div>
+        <div class="badge">${d.premium ? '🚀 TOP' : (isNew ? 'NY' : isTrending ? '🔥 POPULÆR' : '')}</div>
         <img src="${d.image || 'https://via.placeholder.com/300'}" style="width:100%">
         <h4>${d.title}</h4>
         <p>${d.price} kr</p>
@@ -244,6 +275,50 @@ function render(){
 }
 
 function toggleMyAds(){ showOnlyMine = !showOnlyMine; render(); }
+
+// 🔥 VIRAL / PSYKOLOGI SYSTEM
+function liveActivity(){
+  const viewers = Math.floor(Math.random()*12)+3;
+  const banner = document.createElement("div");
+  banner.style.position="fixed";
+  banner.style.top="80px";
+  banner.style.right="20px";
+  banner.style.background="#00c853";
+  banner.style.color="#fff";
+  banner.style.padding="10px 14px";
+  banner.style.borderRadius="10px";
+  banner.style.fontSize="12px";
+  banner.innerText = viewers + " personer kigger lige nu 🔥";
+  document.body.appendChild(banner);
+  setTimeout(()=>banner.remove(),4000);
+}
+setInterval(liveActivity,8000);
+
+function urgencyPopup(){
+  const msg = document.createElement("div");
+  msg.style.position="fixed";
+  msg.style.bottom="80px";
+  msg.style.left="20px";
+  msg.style.background="#ff5252";
+  msg.style.color="#fff";
+  msg.style.padding="10px";
+  msg.style.borderRadius="10px";
+  msg.innerText = "🔥 En annonce blev lige solgt!";
+  document.body.appendChild(msg);
+  setTimeout(()=>msg.remove(),3000);
+}
+setInterval(urgencyPopup,12000);
+
+function exitIntent(){
+  document.addEventListener("mouseout", e=>{
+    if(e.clientY < 10){
+      alert("🔥 Vent! Opret gratis annonce og sælg hurtigt");
+    }
+  });
+}
+exitIntent();
+
+render(); }
 function toggleFavorites(){ showFavorites = !showFavorites; render(); }
 function toggleFav(id){
   let favs = JSON.parse(localStorage.getItem("favs")||"[]");
@@ -272,6 +347,8 @@ function sendContact(){
 function save(){
   if(!currentUser) return alert("Log ind først");
 
+  const isPremium = confirm("Intro: Boost din annonce til TOP for 19 kr via MobilePay");
+
   const title=document.getElementById("title").value;
   const price=document.getElementById("price").value;
   const city=document.getElementById("city").value;
@@ -282,8 +359,18 @@ function save(){
 
   if(!title || !price) return alert("Udfyld titel og pris");
 
+  if(isPremium){
+    alert("Send 19 kr via MobilePay og skriv din annonce titel som tekst 💰");
+  }
+
   const addData = (img)=>{
-    db.collection("listings").add({title,price,city,desc,category,subcategory,image:img,user:currentUser.uid,created:Date.now()});
+    db.collection("listings").add({
+      title,price,city,desc,category,subcategory,
+      image:img,
+      user:currentUser.uid,
+      created:Date.now(),
+      premium:isPremium
+    });
     closeModal();
     document.getElementById("title").value="";
     document.getElementById("price").value="";
@@ -330,6 +417,7 @@ function openChat(id){
 function closeChat(){ document.getElementById("chatModal").style.display="none"; }
 
 function sendMessage(){
+  showNotification("📩 Besked sendt");
   // simple notification simulation
   alert("Ny besked sendt! Modtager får notifikation (simuleret)");
   const text=document.getElementById("chatInput").value;
@@ -345,6 +433,86 @@ function sendMessage(){
 }
 
 render();
+
+// 🔔 NOTIFIKATIONER
+function showNotification(text){
+  const n = document.createElement("div");
+  n.style.position="fixed";
+  n.style.top="20px";
+  n.style.left="50%";
+  n.style.transform="translateX(-50%)";
+  n.style.background="#000";
+  n.style.color="#fff";
+  n.style.padding="10px 15px";
+  n.style.borderRadius="10px";
+  n.innerText = text;
+  document.body.appendChild(n);
+  setTimeout(()=>n.remove(),3000);
+}
+
+// ADMIN
+function openAdmin(){
+  document.getElementById("adminModal").style.display="block";
+  loadAdmin();
+}
+function closeAdmin(){ document.getElementById("adminModal").style.display="none"; }
+
+function loadAdmin(){
+  db.collection("listings").get().then(snap=>{
+    const total = snap.size;
+    let premium = 0;
+    snap.forEach(d=>{ if(d.data().premium) premium++; });
+    document.getElementById("adminStats").innerHTML = `
+      <p>📦 Annoncer: ${total}</p>
+      <p>🚀 Premium: ${premium}</p>
+      <p>💰 Potentiel indtjening: ${premium*19} kr</p>
+    `;
+  });
+}
+
+// Referral / invite (simpel)
+function invite(){
+  const link = window.location.href + "?ref=" + (currentUser? currentUser.uid : "guest");
+  navigator.clipboard.writeText(link);
+  alert("Invitationslink kopieret! Del det og få trafik 🚀");
+}
+
+// AUTO SEO GENERATOR 🚀
+const path = window.location.pathname;
+
+const cities = ["kobenhavn","aarhus","odense","aalborg","amager"];
+const keywords = [
+  {slug:"iphone-brugt", q:"iphone", title:"Brugt iPhone"},
+  {slug:"lejebolig", q:"lejebolig", title:"Lejebolig"},
+  {slug:"brugt-sofa", q:"sofa", title:"Brugt sofa"},
+  {slug:"billige-biler", q:"bil", title:"Billige biler"}
+];
+
+function generateSeo(){
+  for(const k of keywords){
+    for(const c of cities){
+      const url = `/${k.slug}-${c}`;
+      if(path === url){
+        const fullTitle = `${k.title} ${c.toUpperCase()} | Køb og salg`;
+        document.querySelector(".hero h1").innerText = fullTitle;
+
+        const seoDiv = document.createElement("div");
+        seoDiv.style.padding = "20px";
+        seoDiv.innerHTML = `
+          <h2>${fullTitle}</h2>
+          <p>Find ${k.title.toLowerCase()} i ${c}. Køb billigt eller sælg hurtigt på Den Nye Avis.</p>
+          <p>Gratis annoncer i ${c} – nem og hurtig handel.</p>
+        `;
+        document.body.insertBefore(seoDiv, document.getElementById("listings"));
+
+        document.getElementById("searchInput").value = k.q;
+      }
+    }
+  }
+}
+
+generateSeo();
+
 </script>
 
 <script type="application/ld+json">

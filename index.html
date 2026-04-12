@@ -52,6 +52,10 @@ button:hover {background:#ffd633; transform:scale(1.05)}
 </header>
 
 <div class="hero">
+<div id="liveCounter" style="position:absolute;top:50px;left:50%;transform:translateX(-50%);background:#00c853;color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:bold">👀 187 kigger lige nu</div>
+<div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#ffcc00;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:bold">
+🔥 Gratis annoncer – begrænset intro periode
+</div>
 <input id="searchInput" placeholder="Søg fx iPhone, sofa, bolig" style="padding:10px;width:60%;max-width:400px" oninput="render()"><br><br>
 <select id="categoryFilter" onchange="render()" style="padding:8px;margin-bottom:10px">
 <option value="all">Alle kategorier</option>
@@ -76,6 +80,10 @@ button:hover {background:#ffd633; transform:scale(1.05)}
 <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae" style="height:120px;border-radius:10px">
 <img src="https://images.unsplash.com/photo-1493666438817-866a91353ca9" style="height:120px;border-radius:10px">
 <img src="https://images.unsplash.com/photo-1560185127-6ed189bf02f4" style="height:120px;border-radius:10px">
+<img src="https://images.unsplash.com/photo-1581291518857-4e27b48ff24e" style="height:120px;border-radius:10px">
+<img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8" style="height:120px;border-radius:10px">
+<img src="https://images.unsplash.com/photo-1484154218962-a197022b5858" style="height:120px;border-radius:10px">
+<img src="https://images.unsplash.com/photo-1503602642458-232111445657" style="height:120px;border-radius:10px">
 </div>
 <div style="padding:10px;font-size:14px;color:#555">
 <h3>Populære søgninger</h3>
@@ -211,10 +219,15 @@ function copyLink(){
 }
 
 function render(){
+  startLiveCounter();
+  startSlideshow();
   const favs = JSON.parse(localStorage.getItem("favs")||"[]");
   let viewCounts = JSON.parse(localStorage.getItem("views")||"{}");
   const container=document.getElementById("listings");
   const carousel=document.getElementById("carousel");
+
+  // slideshow reset
+  carousel.innerHTML="";
 
   db.collection("listings").orderBy("created","desc").onSnapshot(snapshot=>{
     container.innerHTML="";
@@ -274,7 +287,80 @@ function render(){
   });
 }
 
+
+// 🔥 LIVE COUNTER (100-500)
+function startLiveCounter(){
+  if(window.counterRunning) return;
+  window.counterRunning = true;
+  let count = 120 + Math.floor(Math.random()*200);
+  setInterval(()=>{
+    count += Math.floor(Math.random()*20-10);
+    if(count < 80) count = 120;
+    if(count > 500) count = 350;
+    const el = document.getElementById("liveCounter");
+    if(el) el.innerText = `👀 ${count} kigger lige nu`;
+  },3000);
+}
+
+// 🎞 SLIDESHOW AF NYE ANNONCER
+function startSlideshow(){
+  if(window.slideRunning) return;
+  window.slideRunning = true;
+  const track = document.getElementById("carousel");
+  db.collection("listings").orderBy("created","desc").limit(10).get().then(snap=>{
+    track.innerHTML="";
+    snap.forEach(doc=>{
+      const d = doc.data();
+      const img = document.createElement("img");
+      img.src = d.image || 'https://via.placeholder.com/300';
+      track.appendChild(img);
+    });
+  });
+}
+
 function toggleMyAds(){ showOnlyMine = !showOnlyMine; render(); }
+
+// 🔥 VIRAL / PSYKOLOGI SYSTEM
+function liveActivity(){
+  const viewers = Math.floor(Math.random()*12)+3;
+  const banner = document.createElement("div");
+  banner.style.position="fixed";
+  banner.style.top="80px";
+  banner.style.right="20px";
+  banner.style.background="#00c853";
+  banner.style.color="#fff";
+  banner.style.padding="10px 14px";
+  banner.style.borderRadius="10px";
+  banner.style.fontSize="12px";
+  banner.innerText = viewers + " personer kigger lige nu 🔥";
+  document.body.appendChild(banner);
+  setTimeout(()=>banner.remove(),4000);
+}
+setInterval(liveActivity,8000);
+
+function urgencyPopup(){
+  const msg = document.createElement("div");
+  msg.style.position="fixed";
+  msg.style.bottom="80px";
+  msg.style.left="20px";
+  msg.style.background="#ff5252";
+  msg.style.color="#fff";
+  msg.style.padding="10px";
+  msg.style.borderRadius="10px";
+  msg.innerText = "🔥 En annonce blev lige solgt!";
+  document.body.appendChild(msg);
+  setTimeout(()=>msg.remove(),3000);
+}
+setInterval(urgencyPopup,12000);
+
+function exitIntent(){
+  document.addEventListener("mouseout", e=>{
+    if(e.clientY < 10){
+      alert("🔥 Vent! Opret gratis annonce og sælg hurtigt");
+    }
+  });
+}
+exitIntent();
 
 // 🔥 VIRAL / PSYKOLOGI SYSTEM
 function liveActivity(){

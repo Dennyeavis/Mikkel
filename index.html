@@ -113,6 +113,12 @@ button:hover {background:#ffd633; transform:scale(1.05)}
 
 <div class="cta-popup" onclick="openModal()">🚀 Sælg hurtigt – opret annonce nu!</div>
 
+<!-- 💰 MONETIZATION BAR -->
+<div style="position:fixed;bottom:0;left:0;width:100%;background:#003399;color:#fff;padding:10px;display:flex;justify-content:space-between;align-items:center;z-index:999">
+  <div>🚀 Boost din annonce til toppen</div>
+  <button onclick="payBoost()">Betal 19 kr</button>
+</div>
+
 <!-- KONTAKT -->
 <div class="modal" id="contactModal">
 <div class="box">
@@ -328,6 +334,18 @@ function startSlideshow(){
 
 function toggleMyAds(){ showOnlyMine = !showOnlyMine; render(); }
 
+// 💰 MOBILEPAY BOOST
+function payBoost(){
+  window.open("https://mobilepay.dk");
+  alert("Send 19 kr til 22473434 og skriv din annonce titel 💰");
+}
+
+// 📢 DEL HELE SIDEN
+function shareSite(){
+  const url = "https://dennyeavis.dk";
+  window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(url));
+}
+
 // 🔥 VIRAL / PSYKOLOGI SYSTEM
 function liveActivity(){
   const actions = [
@@ -459,6 +477,24 @@ function sendContact(){
 }
 
 function save(){
+  if(!currentUser) return alert("Log ind først");
+
+  const isPremium = confirm("Intro: Boost din annonce til TOP for 19 kr via MobilePay");
+
+  const title=document.getElementById("title").value;
+  const price=document.getElementById("price").value;
+  const city=document.getElementById("city").value;
+  const desc=document.getElementById("desc").value;
+  const category=document.getElementById("category").value;
+  const subcategory=document.getElementById("subcategory").value;
+  const file=document.getElementById("image").files[0];
+
+  if(!title || !price) return alert("Udfyld titel og pris");
+
+  if(isPremium){
+    window.open("https://mobilepay.dk");
+    alert("Send 19 kr til 22473434 via MobilePay 💰 og skriv din annonce titel");
+  }
   if(!currentUser) return alert("Log ind først");
 
   const isPremium = confirm("Intro: Boost din annonce til TOP for 19 kr via MobilePay");

@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Den Nye Avis</title>
+<title>Den Nye Avis - Køb og salg i Danmark | Gratis annoncer</title>
+<meta name="keywords" content="køb og salg, brugte ting, bolig, lejebolig, brugt sofa, iPhone brugt, DBA alternativ">
+<meta property="og:title" content="Den Nye Avis - Køb og salg">
+<meta property="og:description" content="Gratis markedsplads i Danmark. Køb og sælg nemt.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dennyeavis.dk">
 <meta name="description" content="Køb og sælg brugte ting i Danmark. Gratis annoncer på Den Nye Avis.">
 <style>
 body {font-family: Arial; margin:0}
@@ -32,18 +37,30 @@ button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margi
 <button onclick="login()">Login</button>
 <button onclick="logout()">Logout</button>
 <button onclick="toggleMyAds()">Mine annoncer</button>
+<button onclick="toggleFavorites()">Favoritter</button>
 <button onclick="openModal()">Ny annonce</button>
 <button onclick="openContact()">Kontakt</button>
 </div>
 </header>
 
 <div class="hero">
-<h1>Køb og sælg i hele Danmark</h1>
+<input id="searchInput" placeholder="Søg fx iPhone, sofa, bolig" style="padding:10px;width:60%;max-width:400px" oninput="render()"><br><br>
+<select id="categoryFilter" onchange="render()" style="padding:8px;margin-bottom:10px">
+<option value="all">Alle kategorier</option>
+<option value="items">Varer</option>
+<option value="bolig">Bolig</option>
+</select>
+<h1>Køb og salg i Danmark - brugte ting, bolig og meget mere</h1>
+<p style="font-size:14px;color:#666">Find brugte møbler, biler, iPhones og boliger i hele Danmark</p>
 <p>Gratis annoncer – hurtigt og nemt</p>
 <button onclick="openModal()">Opret annonce nu</button>
 </div>
 
 <div class="carousel"><div class="carousel-track" id="carousel"></div></div>
+<div style="padding:10px;font-size:14px;color:#555">
+<h3>Populære søgninger</h3>
+<p>Køb brugt sofa København | Lejebolig København | Brugt iPhone | Billig bil Danmark</p>
+</div>
 <div class="grid" id="listings"></div>
 
 <div class="cta-popup" onclick="openModal()">📢 Har du noget at sælge?</div>
@@ -68,6 +85,10 @@ button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margi
 <input id="price" placeholder="Pris"><br>
 <input id="city" placeholder="By"><br>
 <textarea id="desc" placeholder="Beskrivelse"></textarea><br>
+<select id="category">
+<option value="items">Varer</option>
+<option value="bolig">Bolig</option>
+</select><br>
 <input type="file" id="image"><br><br>
 <button onclick="save()">Gem</button>
 <button onclick="closeModal()">Luk</button>
@@ -102,6 +123,7 @@ const auth = firebase.auth();
 
 let currentUser = null;
 let showOnlyMine = false;
+let showFavorites = false;
 let currentChatId = null;
 
 function login(){
@@ -123,6 +145,7 @@ function share(title){
 }
 
 function render(){
+  const favs = JSON.parse(localStorage.getItem("favs")||"[]");
   const container=document.getElementById("listings");
   const carousel=document.getElementById("carousel");
 
@@ -130,18 +153,25 @@ function render(){
     container.innerHTML="";
     carousel.innerHTML="";
 
+    const selectedCategory = document.getElementById("categoryFilter")?.value || "all";
+    const q = (document.getElementById("searchInput")?.value || "").toLowerCase();
     snapshot.forEach(doc=>{
       const d=doc.data();
       if(showOnlyMine && currentUser && d.user !== currentUser.uid) return;
+      if(showFavorites && !favs.includes(doc.id)) return;
+      if(selectedCategory !== "all" && d.category !== selectedCategory) return;
+      if(q && !( (d.title||"").toLowerCase().includes(q) || (d.desc||"").toLowerCase().includes(q) || (d.city||"").toLowerCase().includes(q) )) return;
 
       const div=document.createElement("div");
       div.className="card";
 
+      const isFav = favs.includes(doc.id);
       div.innerHTML=`
         <img src="${d.image || 'https://via.placeholder.com/300'}" style="width:100%">
         <h4>${d.title}</h4>
         <p>${d.price} kr</p>
         <small>${d.city}</small>
+        <br><button onclick="toggleFav('${doc.id}')">${isFav? '❤️ Fjern' : '🤍 Favorit'}</button>
         <br><button onclick="openChat('${doc.id}')">Chat</button>
         <button onclick="share('${d.title}')">Del</button>
         ${currentUser && d.user === currentUser.uid ? `<br><button onclick="deleteAd('${doc.id}')">Slet</button>` : ""}
@@ -158,6 +188,13 @@ function render(){
 }
 
 function toggleMyAds(){ showOnlyMine = !showOnlyMine; render(); }
+function toggleFavorites(){ showFavorites = !showFavorites; render(); }
+function toggleFav(id){
+  let favs = JSON.parse(localStorage.getItem("favs")||"[]");
+  if(favs.includes(id)) favs = favs.filter(f=>f!==id); else favs.push(id);
+  localStorage.setItem("favs", JSON.stringify(favs));
+  render();
+}
 function deleteAd(id){ if(confirm("Slet?")) db.collection("listings").doc(id).delete(); }
 
 function openModal(){ if(!currentUser) return alert("Log ind"); document.getElementById("modal").style.display="block"; }
@@ -183,12 +220,13 @@ function save(){
   const price=document.getElementById("price").value;
   const city=document.getElementById("city").value;
   const desc=document.getElementById("desc").value;
+  const category=document.getElementById("category").value;
   const file=document.getElementById("image").files[0];
 
   if(!title || !price) return alert("Udfyld titel og pris");
 
   const addData = (img)=>{
-    db.collection("listings").add({title,price,city,desc,image:img,user:currentUser.uid,created:Date.now()});
+    db.collection("listings").add({title,price,city,desc,category,image:img,user:currentUser.uid,created:Date.now()});
     closeModal();
     document.getElementById("title").value="";
     document.getElementById("price").value="";
@@ -250,5 +288,18 @@ function sendMessage(){
 render();
 </script>
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Den Nye Avis",
+  "url": "https://dennyeavis.dk",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://dennyeavis.dk/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
 </body>
 </html>

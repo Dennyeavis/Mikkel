@@ -11,19 +11,26 @@
 <meta property="og:url" content="https://dennyeavis.dk">
 <meta name="description" content="Køb og sælg brugte ting i Danmark. Gratis annoncer på Den Nye Avis.">
 <style>
-body {font-family: Arial; margin:0}
-header {background:#003399; color:#fff; padding:15px; display:flex; justify-content:space-between; align-items:center}
-button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margin-left:5px}
-.hero {padding:30px; text-align:center; background:#f5f5f5}
+body {font-family: 'Segoe UI', Arial; margin:0; background:#f4f6fb; color:#333}
+header {background:#003399; color:#fff; padding:15px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:10}
+button {background:#ffcc00; border:none; padding:10px 14px; cursor:pointer; margin-left:5px; border-radius:10px; font-weight:600; transition:0.2s}
+button:hover {background:#ffd633; transform:scale(1.05)}
+.hero {padding:60px 20px; text-align:center; background:linear-gradient(135deg,#eef2ff,#f8fafc); position:relative}
+.hero h1 {font-size:28px; margin-bottom:10px}
+.hero input {border-radius:10px; border:1px solid #ccc}
 .grid {display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; padding:10px}
-.card {border:1px solid #ccc; padding:10px}
+.card {background:#fff; border-radius:16px; padding:12px; box-shadow:0 6px 20px rgba(0,0,0,0.08); transition:0.25s; position:relative; overflow:hidden}
+.card:hover {transform:translateY(-5px) scale(1.01); box-shadow:0 10px 25px rgba(0,0,0,0.15)}
+.card img {border-radius:12px; margin-bottom:8px}
+.badge {position:absolute; top:10px; left:10px; background:#ffcc00; padding:4px 8px; border-radius:8px; font-size:12px; font-weight:bold}
+.card:hover {transform:translateY(-3px); box-shadow:0 6px 16px rgba(0,0,0,0.12)}
 .modal {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0008}
 .box {background:#fff; padding:20px; margin:10% auto; width:320px; max-height:70%; overflow:auto}
 .user {font-size:12px}
 .carousel {display:flex; overflow:hidden; gap:10px; padding:10px}
 .carousel-track {display:flex; gap:10px; animation: scroll 20s linear infinite}
 @keyframes scroll {0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.carousel img {width:150px; border-radius:8px}
+.carousel img {width:160px; height:120px; object-fit:cover; border-radius:10px}
 .cta-popup {position:fixed; bottom:20px; right:20px; background:#003399; color:#fff; padding:15px; border-radius:10px; cursor:pointer}
 .footer {padding:20px; text-align:center; background:#eee}
 </style>
@@ -47,8 +54,14 @@ button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margi
 <input id="searchInput" placeholder="Søg fx iPhone, sofa, bolig" style="padding:10px;width:60%;max-width:400px" oninput="render()"><br><br>
 <select id="categoryFilter" onchange="render()" style="padding:8px;margin-bottom:10px">
 <option value="all">Alle kategorier</option>
-<option value="items">Varer</option>
+<option value="elektronik">Elektronik</option>
 <option value="bolig">Bolig</option>
+<option value="bil">Bil</option>
+<option value="møbler">Møbler</option>
+<option value="tøj">Tøj</option>
+<option value="fritid">Fritid</option>
+<option value="dyr">Dyr</option>
+<option value="andet">Andet</option>
 </select>
 <h1>Køb og salg i Danmark - brugte ting, bolig og meget mere</h1>
 <p style="font-size:14px;color:#666">Find brugte møbler, biler, iPhones og boliger i hele Danmark</p>
@@ -57,13 +70,19 @@ button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margi
 </div>
 
 <div class="carousel"><div class="carousel-track" id="carousel"></div></div>
+<div style="padding:10px;display:flex;gap:10px;overflow:auto">
+<img src="https://images.unsplash.com/photo-1519710164239-da123dc03ef4" style="height:120px;border-radius:10px">
+<img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae" style="height:120px;border-radius:10px">
+<img src="https://images.unsplash.com/photo-1493666438817-866a91353ca9" style="height:120px;border-radius:10px">
+<img src="https://images.unsplash.com/photo-1560185127-6ed189bf02f4" style="height:120px;border-radius:10px">
+</div>
 <div style="padding:10px;font-size:14px;color:#555">
 <h3>Populære søgninger</h3>
 <p>Køb brugt sofa København | Lejebolig København | Brugt iPhone | Billig bil Danmark</p>
 </div>
 <div class="grid" id="listings"></div>
 
-<div class="cta-popup" onclick="openModal()">📢 Har du noget at sælge?</div>
+<div class="cta-popup" onclick="openModal()">🚀 Sælg hurtigt – opret annonce nu!</div>
 
 <!-- KONTAKT -->
 <div class="modal" id="contactModal">
@@ -85,9 +104,22 @@ button {background:#ffcc00; border:none; padding:8px 12px; cursor:pointer; margi
 <input id="price" placeholder="Pris"><br>
 <input id="city" placeholder="By"><br>
 <textarea id="desc" placeholder="Beskrivelse"></textarea><br>
-<select id="category">
-<option value="items">Varer</option>
+<select id="category" onchange="updateSubcategories()">
+<option value="elektronik">Elektronik</option>
 <option value="bolig">Bolig</option>
+<option value="bil">Bil</option>
+<option value="møbler">Møbler</option>
+<option value="tøj">Tøj</option>
+<option value="fritid">Fritid</option>
+<option value="dyr">Dyr</option>
+<option value="andet">Andet</option>
+</select><br>
+<select id="subcategory">
+<option value="">Vælg type</option>
+<option value="lejebolig">Lejebolig</option>
+<option value="andelsbolig">Andelsbolig</option>
+<option value="ejerbolig">Ejerbolig</option>
+<option value="sommerhus">Sommerhus</option>
 </select><br>
 <input type="file" id="image"><br><br>
 <button onclick="save()">Gem</button>
@@ -140,12 +172,17 @@ auth.onAuthStateChanged(user=>{
 
 function share(title){
   const url = window.location.href;
-  const text = encodeURIComponent(title + " - Se annoncen her: " + url);
+  const text = encodeURIComponent(title + " - Se annoncen på Den Nye Avis: " + url);
   window.open("https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url) + "&quote=" + text);
+}
+function copyLink(){
+  navigator.clipboard.writeText(window.location.href);
+  alert("Link kopieret – del det i Facebook grupper 🔥");
 }
 
 function render(){
   const favs = JSON.parse(localStorage.getItem("favs")||"[]");
+  let viewCounts = JSON.parse(localStorage.getItem("views")||"{}");
   const container=document.getElementById("listings");
   const carousel=document.getElementById("carousel");
 
@@ -166,17 +203,36 @@ function render(){
       div.className="card";
 
       const isFav = favs.includes(doc.id);
+      viewCounts[doc.id] = viewCounts[doc.id] || 0;
+      const isNew = (Date.now() - d.created) < 86400000;
+      const isTrending = viewCounts[doc.id] > 3;
       div.innerHTML=`
+        <div class="badge">${isNew ? 'NY' : isTrending ? '🔥 POPULÆR' : ''}</div>
         <img src="${d.image || 'https://via.placeholder.com/300'}" style="width:100%">
         <h4>${d.title}</h4>
         <p>${d.price} kr</p>
-        <small>${d.city}</small>
+        <small>${d.city}</small><br><small>${d.subcategory||""}</small>
         <br><button onclick="toggleFav('${doc.id}')">${isFav? '❤️ Fjern' : '🤍 Favorit'}</button>
         <br><button onclick="openChat('${doc.id}')">Chat</button>
-        <button onclick="share('${d.title}')">Del</button>
+        <button onclick="share('${d.title}')">📢 Del</button>
+        <button onclick="copyLink()">🔗 Kopiér link</button>
         ${currentUser && d.user === currentUser.uid ? `<br><button onclick="deleteAd('${doc.id}')">Slet</button>` : ""}
       `;
 
+      div.onclick = () => {
+        viewCounts[doc.id] = (viewCounts[doc.id] || 0) + 1;
+        localStorage.setItem("views", JSON.stringify(viewCounts));
+      };
+      // simple "andre kiggede også på" (random ekstra kort)
+      if(Math.random() > 0.7){
+        const extra = document.createElement("div");
+        extra.className = "card";
+        extra.innerHTML = `<div class="badge">👀 Også set</div>
+          <img src="${d.image || 'https://via.placeholder.com/300'}" style="width:100%">
+          <h4>${d.title}</h4>
+          <p>${d.price} kr</p>`;
+        container.appendChild(extra);
+      }
       container.appendChild(div);
 
       const img=document.createElement("img");
@@ -221,12 +277,13 @@ function save(){
   const city=document.getElementById("city").value;
   const desc=document.getElementById("desc").value;
   const category=document.getElementById("category").value;
+  const subcategory=document.getElementById("subcategory").value;
   const file=document.getElementById("image").files[0];
 
   if(!title || !price) return alert("Udfyld titel og pris");
 
   const addData = (img)=>{
-    db.collection("listings").add({title,price,city,desc,category,image:img,user:currentUser.uid,created:Date.now()});
+    db.collection("listings").add({title,price,city,desc,category,subcategory,image:img,user:currentUser.uid,created:Date.now()});
     closeModal();
     document.getElementById("title").value="";
     document.getElementById("price").value="";
@@ -273,6 +330,8 @@ function openChat(id){
 function closeChat(){ document.getElementById("chatModal").style.display="none"; }
 
 function sendMessage(){
+  // simple notification simulation
+  alert("Ny besked sendt! Modtager får notifikation (simuleret)");
   const text=document.getElementById("chatInput").value;
   if(!text) return;
 

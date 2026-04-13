@@ -346,67 +346,7 @@ function shareSite(){
   window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(url));
 }
 
-// 🔥 VIRAL / PSYKOLOGI SYSTEM
-function liveActivity(){
-  const actions = [
-    "kigger på en annonce",
-    "har lige oprettet en annonce",
-    "har sendt en besked",
-    "har gemt en favorit"
-  ];
 
-  const banner = document.createElement("div");
-  banner.style.position="fixed";
-  banner.style.top="80px";
-  banner.style.left="20px";
-  banner.style.background="#00c853";
-  banner.style.color="#fff";
-  banner.style.padding="10px 14px";
-  banner.style.borderRadius="10px";
-  banner.style.fontSize="12px";
-
-  const users = Math.floor(Math.random()*12)+3;
-  const action = actions[Math.floor(Math.random()*actions.length)];
-
-  banner.innerText = `🔥 ${users} personer ${action}`;
-
-  document.body.appendChild(banner);
-  setTimeout(()=>banner.remove(),4000);
-}
-setInterval(liveActivity,7000);
-
-function urgencyPopup(){
-  const messages = [
-    "🔥 En sofa blev lige solgt!",
-    "⚡ Ny annonce oprettet!",
-    "💰 En bruger fik bud!",
-    "🚀 Premium annonce performer!"
-  ];
-
-  const msg = document.createElement("div");
-  msg.style.position="fixed";
-  msg.style.bottom="80px";
-  msg.style.left="20px";
-  msg.style.background="#ff5252";
-  msg.style.color="#fff";
-  msg.style.padding="10px";
-  msg.style.borderRadius="10px";
-
-  msg.innerText = messages[Math.floor(Math.random()*messages.length)];
-
-  document.body.appendChild(msg);
-  setTimeout(()=>msg.remove(),3000);
-}
-setInterval(urgencyPopup,12000);
-
-function exitIntent(){
-  document.addEventListener("mouseout", e=>{
-    if(e.clientY < 10){
-      alert("🔥 Vent! Opret gratis annonce og sælg hurtigt");
-    }
-  });
-}
-exitIntent();
 
 // 🔥 VIRAL / PSYKOLOGI SYSTEM
 function liveActivity(){
@@ -479,8 +419,6 @@ function sendContact(){
 function save(){
   if(!currentUser) return alert("Log ind først");
 
-  const isPremium = confirm("Intro: Boost din annonce til TOP for 19 kr via MobilePay");
-
   const title=document.getElementById("title").value;
   const price=document.getElementById("price").value;
   const city=document.getElementById("city").value;
@@ -490,28 +428,6 @@ function save(){
   const file=document.getElementById("image").files[0];
 
   if(!title || !price) return alert("Udfyld titel og pris");
-
-  if(isPremium){
-    window.open("https://mobilepay.dk");
-    alert("Send 19 kr til 22473434 via MobilePay 💰 og skriv din annonce titel");
-  }
-  if(!currentUser) return alert("Log ind først");
-
-  const isPremium = confirm("Intro: Boost din annonce til TOP for 19 kr via MobilePay");
-
-  const title=document.getElementById("title").value;
-  const price=document.getElementById("price").value;
-  const city=document.getElementById("city").value;
-  const desc=document.getElementById("desc").value;
-  const category=document.getElementById("category").value;
-  const subcategory=document.getElementById("subcategory").value;
-  const file=document.getElementById("image").files[0];
-
-  if(!title || !price) return alert("Udfyld titel og pris");
-
-  if(isPremium){
-    alert("Send 19 kr via MobilePay og skriv din annonce titel som tekst 💰");
-  }
 
   const addData = (img)=>{
     db.collection("listings").add({
@@ -519,29 +435,15 @@ function save(){
       image:img,
       user:currentUser.uid,
       created:Date.now(),
-      premium:isPremium
+      premium:false
     });
     closeModal();
-    document.getElementById("title").value="";
-    document.getElementById("price").value="";
-    document.getElementById("city").value="";
-    document.getElementById("desc").value="";
-    document.getElementById("image").value="";
   };
 
   if(!file) return addData("https://via.placeholder.com/300");
 
-  const img = new Image();
   const reader = new FileReader();
-  reader.onload=e=>img.src=e.target.result;
-  img.onload=()=>{
-    const canvas=document.createElement("canvas");
-    const scale=800/img.width;
-    canvas.width=800;
-    canvas.height=img.height*scale;
-    canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-    addData(canvas.toDataURL("image/jpeg",0.7));
-  };
+  reader.onload=e=>addData(e.target.result);
   reader.readAsDataURL(file);
 }
 

@@ -332,7 +332,7 @@ function startSlideshow(){
   });
 }
 
-function toggleMyAds(){ showOnlyMine = !showOnlyMine; render(); }
+function toggleMyAds(){ showOnlyMine = !showOnlyMine; render();
 
 // 💰 MOBILEPAY BOOST
 function payBoost(){
@@ -390,8 +390,8 @@ function exitIntent(){
 }
 exitIntent();
 
-render(); }
-function toggleFavorites(){ showFavorites = !showFavorites; render(); }
+render();
+function toggleFavorites(){ showFavorites = !showFavorites; render();
 function toggleFav(id){
   let favs = JSON.parse(localStorage.getItem("favs")||"[]");
   if(favs.includes(id)) favs = favs.filter(f=>f!==id); else favs.push(id);
